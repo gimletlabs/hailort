@@ -8,52 +8,68 @@ set(HAILORT_REVISION_VERSION 0)
 # Add the cmake folder so the modules there are found
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
+# [GML] Instead of generating the proto files, and compiling them with cmake,
+# we vendor the protos, build them in Gimlet, and add them in as a library.
+
 # Generate hef-proto files using host protobuf
-protobuf_generate_cpp(PROTO_HEF_SRC PROTO_HEF_HEADER hef.proto)
-protobuf_generate_python(PROTO_HEF_PY hef.proto) # TODO (HRT-12504): Copy hef_pb2.py to tools directory
-protobuf_generate_python(PROTO_HEF_PY tracer_profiler.proto)
+# protobuf_generate_cpp(PROTO_HEF_SRC PROTO_HEF_HEADER hef.proto)
+# protobuf_generate_python(PROTO_HEF_PY hef.proto) # TODO (HRT-12504): Copy hef_pb2.py to tools directory
+# protobuf_generate_python(PROTO_HEF_PY tracer_profiler.proto)
 
-add_library(hef_proto ${PROTO_HEF_SRC} ${PROTO_HEF_HEADER} ${PROTO_HEF_PY})
-target_link_libraries(hef_proto libprotobuf-lite)
-set_target_properties(hef_proto PROPERTIES CXX_STANDARD 14 GENERATED TRUE POSITION_INDEPENDENT_CODE ON)
-if(CMAKE_HOST_WIN32)
-    # https://github.com/protocolbuffers/protobuf/tree/master/cmake#notes-on-compiler-warnings
-    target_compile_options(hef_proto PRIVATE /wd4244)
-endif()
-get_filename_component(PROTO_HEADER_DIRECTORY ${PROTO_HEF_HEADER} DIRECTORY)
-target_include_directories(hef_proto
-    PUBLIC
-    $<BUILD_INTERFACE: ${PROTO_HEADER_DIRECTORY}>
-    $<BUILD_INTERFACE: ${Protobuf_INCLUDE_DIRS}>
-)
+# add_library(hef_proto ${PROTO_HEF_SRC} ${PROTO_HEF_HEADER} ${PROTO_HEF_PY})
+# target_link_libraries(hef_proto libprotobuf-lite)
+# set_target_properties(hef_proto PROPERTIES CXX_STANDARD 14 GENERATED TRUE POSITION_INDEPENDENT_CODE ON)
+# if(CMAKE_HOST_WIN32)
+#     # https://github.com/protocolbuffers/protobuf/tree/master/cmake#notes-on-compiler-warnings
+#     target_compile_options(hef_proto PRIVATE /wd4244)
+# endif()
+# get_filename_component(PROTO_HEADER_DIRECTORY ${PROTO_HEF_HEADER} DIRECTORY)
+# target_include_directories(hef_proto
+#     PUBLIC
+#     $<BUILD_INTERFACE: ${PROTO_HEADER_DIRECTORY}>
+#     $<BUILD_INTERFACE: ${Protobuf_INCLUDE_DIRS}>
+# )
 
-protobuf_generate_cpp(PROTO_SCHEDULER_MON_SRC PROTO_SCHEDULER_MON_HEADR scheduler_mon.proto)
-add_library(scheduler_mon_proto ${PROTO_SCHEDULER_MON_SRC} ${PROTO_SCHEDULER_MON_HEADR})
-target_link_libraries(scheduler_mon_proto libprotobuf-lite)
-set_target_properties(scheduler_mon_proto PROPERTIES CXX_STANDARD 14 GENERATED TRUE POSITION_INDEPENDENT_CODE ON)
-if(CMAKE_HOST_WIN32)
-    target_compile_options(scheduler_mon_proto PRIVATE /wd4244)
-endif()
-get_filename_component(PROTO_SCHEDULER_MON_HEADER_DIRECTORY ${PROTO_SCHEDULER_MON_HEADR} DIRECTORY)
-target_include_directories(scheduler_mon_proto
-    PUBLIC
-    $<BUILD_INTERFACE: ${PROTO_SCHEDULER_MON_HEADER_DIRECTORY}>
-    $<BUILD_INTERFACE: ${Protobuf_INCLUDE_DIRS}>
-)
+add_library(hef_proto INTERFACE)
+target_include_directories(hef_proto INTERFACE ${gml_libhailort_proto_INCLUDE_DIR})
+target_link_libraries(hef_proto INTERFACE ${gml_libhailort_proto_LIBRARY})
 
-protobuf_generate_cpp(PROTO_PROFILER_SRC PROTO_PROFILER_HEADR tracer_profiler.proto)
-add_library(profiler_proto ${PROTO_PROFILER_SRC} ${PROTO_PROFILER_HEADR})
-target_link_libraries(profiler_proto libprotobuf-lite)
-set_target_properties(profiler_proto PROPERTIES CXX_STANDARD 14 GENERATED TRUE POSITION_INDEPENDENT_CODE ON)
-if(CMAKE_HOST_WIN32)
-    target_compile_options(profiler_proto PRIVATE /wd4244)
-endif()
-get_filename_component(PROTO_PROFILER_HEADER_DIRECTORY ${PROTO_PROFILER_HEADR} DIRECTORY)
-target_include_directories(profiler_proto
-    PUBLIC
-    $<BUILD_INTERFACE: ${PROTO_PROFILER_HEADER_DIRECTORY}>
-    $<BUILD_INTERFACE: ${Protobuf_INCLUDE_DIRS}>
-)
+#protobuf_generate_cpp(PROTO_SCHEDULER_MON_SRC PROTO_SCHEDULER_MON_HEADR scheduler_mon.proto)
+# add_library(scheduler_mon_proto ${PROTO_SCHEDULER_MON_SRC} ${PROTO_SCHEDULER_MON_HEADR})
+# target_link_libraries(scheduler_mon_proto libprotobuf-lite)
+# set_target_properties(scheduler_mon_proto PROPERTIES CXX_STANDARD 14 GENERATED TRUE POSITION_INDEPENDENT_CODE ON)
+# if(CMAKE_HOST_WIN32)
+#     target_compile_options(scheduler_mon_proto PRIVATE /wd4244)
+# endif()
+# get_filename_component(PROTO_SCHEDULER_MON_HEADER_DIRECTORY ${PROTO_SCHEDULER_MON_HEADR} DIRECTORY)
+# target_include_directories(scheduler_mon_proto
+#     PUBLIC
+#     $<BUILD_INTERFACE: ${PROTO_SCHEDULER_MON_HEADER_DIRECTORY}>
+#     $<BUILD_INTERFACE: ${Protobuf_INCLUDE_DIRS}>
+# )
+
+add_library(scheduler_mon_proto INTERFACE)
+target_include_directories(scheduler_mon_proto INTERFACE ${gml_libhailort_proto_INCLUDE_DIR})
+target_link_libraries(scheduler_mon_proto INTERFACE ${gml_libhailort_proto_LIBRARY})
+
+#protobuf_generate_cpp(PROTO_PROFILER_SRC PROTO_PROFILER_HEADR tracer_profiler.proto)
+# add_library(profiler_proto ${PROTO_PROFILER_SRC} ${PROTO_PROFILER_HEADR})
+# target_link_libraries(profiler_proto libprotobuf-lite)
+# set_target_properties(profiler_proto PROPERTIES CXX_STANDARD 14 GENERATED TRUE POSITION_INDEPENDENT_CODE ON)
+# if(CMAKE_HOST_WIN32)
+#     target_compile_options(profiler_proto PRIVATE /wd4244)
+# endif()
+# get_filename_component(PROTO_PROFILER_HEADER_DIRECTORY ${PROTO_PROFILER_HEADR} DIRECTORY)
+# target_include_directories(profiler_proto
+#     PUBLIC
+#     $<BUILD_INTERFACE: ${PROTO_PROFILER_HEADER_DIRECTORY}>
+#     $<BUILD_INTERFACE: ${Protobuf_INCLUDE_DIRS}>
+# )
+
+add_library(profiler_proto INTERFACE)
+target_include_directories(profiler_proto INTERFACE ${gml_libhailort_proto_INCLUDE_DIR})
+target_link_libraries(profiler_proto INTERFACE ${gml_libhailort_proto_LIBRARY})
+
 
 add_subdirectory(src)
 set(NET_FLOW_INFRA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/infra/net_flow")

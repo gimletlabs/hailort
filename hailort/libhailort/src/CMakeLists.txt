@@ -66,7 +66,7 @@ set(COMMON_C_SOURCES ${COMMON_C_SOURCES} CACHE INTERNAL "Absolute paths of commo
 set(HAILORT_SRCS_ABS ${HAILORT_CPP_SOURCES} ${HAILORT_COMMON_CPP_SOURCES} ${COMMON_C_SOURCES} ${HRPC_CPP_SOURCES} ${HRPC_PROTOCOL_CPP_SOURCES} CACHE INTERNAL "All absolute paths of hailort's source files")
 
 SET_SOURCE_FILES_PROPERTIES(${C_SOURCES} PROPERTIES LANGUAGE CXX)
-add_library(libhailort SHARED ${HAILORT_SRCS_ABS})
+add_library(libhailort STATIC ${HAILORT_SRCS_ABS})
 
 # Include libraries
 if(WIN32)
@@ -173,7 +173,6 @@ target_compile_definitions(libhailort PUBLIC
 )
 
 install(TARGETS libhailort
-    EXPORT HailoRTTargets
     CONFIGURATIONS Release
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -205,12 +204,6 @@ set(HailoRT_DIR "${CMAKE_SCRIPTS_DIR}" PARENT_SCOPE)
 install(FILES
         "${CMAKE_SCRIPTS_DIR}/HailoRTConfig.cmake"
         "${CMAKE_SCRIPTS_DIR}/HailoRTConfigVersion.cmake"
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/HailoRT
-    COMPONENT libhailort
-)
-install(EXPORT HailoRTTargets
-    FILE HailoRTTargets.cmake
-    NAMESPACE HailoRT::
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/HailoRT
     COMPONENT libhailort
 )

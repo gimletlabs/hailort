@@ -1,21 +1,28 @@
 cmake_minimum_required(VERSION 3.5.0)
 
-protobuf_generate_cpp(PROTO_RPC_SRC PROTO_RPC_HEADER rpc.proto)
-get_filename_component(PROTO_HEADER_DIRECTORY ${PROTO_RPC_HEADER} DIRECTORY)
+# [GML] Instead of generating the proto files, and compiling them with cmake,
+# we vendor the protos, build them in Gimlet, and add them in as a library.
 
-add_library(rpc_proto STATIC EXCLUDE_FROM_ALL ${PROTO_RPC_SRC} ${PROTO_RPC_HEADER})
-target_link_libraries(rpc_proto libprotobuf-lite)
-set_target_properties(rpc_proto PROPERTIES CXX_STANDARD 14 GENERATED TRUE POSITION_INDEPENDENT_CODE ON)
-if(CMAKE_HOST_WIN32)
-    # https://github.com/protocolbuffers/protobuf/tree/master/cmake#notes-on-compiler-warnings
-    target_compile_options(rpc_proto PRIVATE /wd4244)
-endif()
-get_filename_component(PROTO_HEADER_DIRECTORY ${PROTO_RPC_HEADER} DIRECTORY)
-target_include_directories(rpc_proto
-    PUBLIC
-    $<BUILD_INTERFACE: ${PROTO_HEADER_DIRECTORY}>
-    $<BUILD_INTERFACE: ${Protobuf_INCLUDE_DIRS}>
-)
+# protobuf_generate_cpp(PROTO_RPC_SRC PROTO_RPC_HEADER rpc.proto)
+# get_filename_component(PROTO_HEADER_DIRECTORY ${PROTO_RPC_HEADER} DIRECTORY)
+
+# add_library(rpc_proto STATIC EXCLUDE_FROM_ALL ${PROTO_RPC_SRC} ${PROTO_RPC_HEADER})
+# target_link_libraries(rpc_proto libprotobuf-lite)
+# set_target_properties(rpc_proto PROPERTIES CXX_STANDARD 14 GENERATED TRUE POSITION_INDEPENDENT_CODE ON)
+# if(CMAKE_HOST_WIN32)
+#     # https://github.com/protocolbuffers/protobuf/tree/master/cmake#notes-on-compiler-warnings
+#     target_compile_options(rpc_proto PRIVATE /wd4244)
+# endif()
+# get_filename_component(PROTO_HEADER_DIRECTORY ${PROTO_RPC_HEADER} DIRECTORY)
+# target_include_directories(rpc_proto
+#     PUBLIC
+#     $<BUILD_INTERFACE: ${PROTO_HEADER_DIRECTORY}>
+#     $<BUILD_INTERFACE: ${Protobuf_INCLUDE_DIRS}>
+# )
+
+add_library(rpc_proto INTERFACE)
+target_include_directories(rpc_proto INTERFACE ${gml_rpc_proto_INCLUDE_DIR})
+target_link_libraries(rpc_proto INTERFACE ${gml_rpc_proto_LIBRARY})
 
 set(SRC_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/serializer.cpp
