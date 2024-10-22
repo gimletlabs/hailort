@@ -75,9 +75,9 @@ hailo_status VdmaDevice::fw_interact_impl(uint8_t *request_buffer, size_t reques
     uint8_t request_md5[PCIE_EXPECTED_MD5_LENGTH];
     MD5_CTX ctx;
 
-    MD5_Init(&ctx);
-    MD5_Update(&ctx, request_buffer, request_size);
-    MD5_Final(request_md5, &ctx);
+    Hailo_MD5_Init(&ctx);
+    Hailo_MD5_Update(&ctx, request_buffer, request_size);
+    Hailo_MD5_Final(request_md5, &ctx);
 
     uint8_t response_md5[PCIE_EXPECTED_MD5_LENGTH];
     uint8_t expected_response_md5[PCIE_EXPECTED_MD5_LENGTH];
@@ -87,9 +87,9 @@ hailo_status VdmaDevice::fw_interact_impl(uint8_t *request_buffer, size_t reques
         DEFAULT_TIMEOUT, cpu_id);
     CHECK_SUCCESS(status, "Failed to send fw control");
 
-    MD5_Init(&ctx);
-    MD5_Update(&ctx, response_buffer, (*response_size));
-    MD5_Final(expected_response_md5, &ctx);
+    Hailo_MD5_Init(&ctx);
+    Hailo_MD5_Update(&ctx, response_buffer, (*response_size));
+    Hailo_MD5_Final(expected_response_md5, &ctx);
 
     auto memcmp_result = memcmp(expected_response_md5, response_md5, sizeof(response_md5));
     CHECK(0 == memcmp_result, HAILO_INTERNAL_FAILURE, "MD5 validation of control response failed.");

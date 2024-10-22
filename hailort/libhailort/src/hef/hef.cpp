@@ -337,9 +337,9 @@ Expected<size_t> calc_hef_residue_size(std::shared_ptr<SeekableBytesReader> hef_
 static hailo_status calc_buffer_md5(const uint8_t *buffer, const size_t buffer_size, MD5_SUM_t &calculated_md5)
 {
     MD5_CTX md5 = {};
-    MD5_Init(&md5);
-    MD5_Update(&md5, buffer, buffer_size);
-    MD5_Final(calculated_md5, &md5);
+    Hailo_MD5_Init(&md5);
+    Hailo_MD5_Update(&md5, buffer, buffer_size);
+    Hailo_MD5_Final(calculated_md5, &md5);
 
     return HAILO_SUCCESS;
 }
@@ -352,13 +352,13 @@ static hailo_status calc_istream_md5(std::ifstream &s, MD5_SUM_t &calculated_md5
     auto beg_pos = s.tellg();
     CHECK(-1 != beg_pos, HAILO_FILE_OPERATION_FAILURE, "ifstream::tellg() failed");
 
-    MD5_Init(&md5);
+    Hailo_MD5_Init(&md5);
     while (!s.eof()) {
         s.read(md5_buffer, HEF__MD5_BUFFER_SIZE);
         CHECK(!s.bad(), HAILO_FILE_OPERATION_FAILURE, "ifstream::read() failed");
-        MD5_Update(&md5, &md5_buffer, s.gcount());
+        Hailo_MD5_Update(&md5, &md5_buffer, s.gcount());
     }
-    MD5_Final(calculated_md5, &md5);
+    Hailo_MD5_Final(calculated_md5, &md5);
 
     s.clear();
     s.seekg(beg_pos, s.beg);
@@ -411,7 +411,7 @@ hailo_status Hef::Impl::validate_hef_extensions()
     }
 
     CHECK(unsupported_extensions.empty(), HAILO_INVALID_HEF, "Failed opening non-compatible HEF with the following unsupported extensions: {}",
-        std::accumulate(std::next(unsupported_extensions.begin()), unsupported_extensions.end(), unsupported_extensions[0], 
+        std::accumulate(std::next(unsupported_extensions.begin()), unsupported_extensions.end(), unsupported_extensions[0],
         [] (std::string a, std::string b) { return std::move(a) + ", " + b; }));
 
     return HAILO_SUCCESS;
@@ -1035,7 +1035,7 @@ Expected<std::unordered_map<std::string, net_flow::BufferMetaData>> create_input
     return inputs_metadata;
 }
 
-uint32_t compute_num_of_proposals(const std::unordered_map<std::string, net_flow::BufferMetaData> &inputs_metadatas, std::map<std::string, 
+uint32_t compute_num_of_proposals(const std::unordered_map<std::string, net_flow::BufferMetaData> &inputs_metadatas, std::map<std::string,
     std::vector<int>> &anchors)
 {
     uint32_t num_of_proposals = 0;
@@ -1602,7 +1602,7 @@ Expected<CONTROL_PROTOCOL__nn_stream_config_t> HefConfigurator::parse_nn_stream_
     stream_config.periph_bytes_per_buffer = static_cast<uint16_t>(edge_layer.core_bytes_per_buffer());
 
     // If hw padding is enabled - and shape fits in uint16t - change initial periph value to be row size - in any case
-    // Will get updated if there is resource manager - and in ethernet will have either core register values - and if hw 
+    // Will get updated if there is resource manager - and in ethernet will have either core register values - and if hw
     // padding will have hw padding values
     if (hw_padding_supported) {
         if (IS_FIT_IN_UINT16(edge_layer.width() * edge_layer.features() * edge_layer.data_bytes())) {
@@ -1831,7 +1831,7 @@ bool Hef::Impl::check_hef_optional_extension(const ProtoHEFExtensionType &extens
             [extension] (const ProtoHEFOptionalExtension &extended_feature) { return ((ProtoHEFExtensionType)extended_feature.type_index()) == extension; }) != hef_optional_extensions.end();
     }
 
-    /* optional extensions are only for m_header.version() > 0. 
+    /* optional extensions are only for m_header.version() > 0.
        For lower version, those features are not supported */
     return false;
 }
@@ -1950,11 +1950,11 @@ static hailo_3d_image_shape_t parse_layer_hw_shape(const ProtoHEFEdgeLayerBase &
     if (is_core_hw_padding_supported) {
         return hailo_3d_image_shape_t{base_info.height(), base_info.width(), base_info.features()};
     } else {
-        return hailo_3d_image_shape_t{base_info.padded_height(), base_info.padded_width(), base_info.padded_features()}; 
+        return hailo_3d_image_shape_t{base_info.padded_height(), base_info.padded_width(), base_info.padded_features()};
     }
 }
 
-hailo_status HefUtils::fill_layer_info_with_base_info(const ProtoHEFEdgeLayerBase &base_info, 
+hailo_status HefUtils::fill_layer_info_with_base_info(const ProtoHEFEdgeLayerBase &base_info,
     const ProtoHEFEdgeConnectionType &edge_connection_type, const ProtoHEFNetworkGroupMetadata &network_group_proto,
     bool transposed, const uint16_t context_index, const uint8_t network_index, LayerInfo &layer_info,
     const SupportedFeatures &supported_features, const ProtoHEFHwArch &hef_arch, const bool is_part_of_mux_layer)
@@ -2021,9 +2021,9 @@ hailo_status HefUtils::fill_layer_info_with_base_info(const ProtoHEFEdgeLayerBas
     return HAILO_SUCCESS;
 }
 
-hailo_status HefUtils::fill_layer_info(const ProtoHEFEdgeLayerInfo &info, 
+hailo_status HefUtils::fill_layer_info(const ProtoHEFEdgeLayerInfo &info,
     const ProtoHEFEdgeConnectionType &edge_connection_type, const ProtoHEFCoreOpMock &core_op,
-    hailo_stream_direction_t direction, const uint16_t context_index, const std::string &partial_network_name, 
+    hailo_stream_direction_t direction, const uint16_t context_index, const std::string &partial_network_name,
     uint8_t network_index, LayerInfo &layer_info, const SupportedFeatures &supported_features, const ProtoHEFHwArch &hef_arch,
     const bool is_part_of_mux_layer)
 {
@@ -2151,7 +2151,7 @@ hailo_status HefUtils::fill_fused_nms_info(const ProtoHEFEdgeLayerFused &info, L
 
 hailo_status HefUtils::fill_mux_info(const ProtoHEFEdgeLayerMux &info,
     const ProtoHEFEdgeConnectionType &edge_connection_type, const ProtoHEFCoreOpMock &core_op,
-    hailo_stream_direction_t direction, const uint16_t context_index, const std::string &partial_network_name, 
+    hailo_stream_direction_t direction, const uint16_t context_index, const std::string &partial_network_name,
     uint8_t network_index, LayerInfo &layer_info, const SupportedFeatures &supported_features, const ProtoHEFHwArch &hef_arch)
 {
     if (HAILO_MAX_STREAM_NAME_SIZE < (info.name().length() + 1)) {
@@ -2229,7 +2229,7 @@ Expected<hailo_format_order_t> convert_planes_format_to_hailo_format_order(const
 
 hailo_status HefUtils::fill_planes_info(const ProtoHEFEdgeLayerPlanes &info,
     const ProtoHEFEdgeConnectionType &edge_connection_type, const ProtoHEFCoreOpMock &core_op,
-    hailo_stream_direction_t direction, const uint16_t context_index, const std::string &partial_network_name, 
+    hailo_stream_direction_t direction, const uint16_t context_index, const std::string &partial_network_name,
     uint8_t network_index, LayerInfo &layer_info, const SupportedFeatures &supported_features, const ProtoHEFHwArch &hef_arch)
 {
     TRY(layer_info.type, get_layer_type(edge_connection_type));
@@ -2351,15 +2351,15 @@ hailo_status HefUtils::check_ddr_pairs_match(
                 found_mathing_layer = true;
                 CHECK(ddr_output_layer.nn_stream_config.core_bytes_per_buffer == ddr_input_layer.nn_stream_config.core_bytes_per_buffer,
                     HAILO_INVALID_HEF, "both sides for DDR pair must have the same core_bytes_per_buffer.\n"
-                    "context index {}.  Output stream index - {} output side core_bytes_per_buffer - {}." 
+                    "context index {}.  Output stream index - {} output side core_bytes_per_buffer - {}."
                     "input stream index {}.input size core_bytes_per_buffer - {}",
-                    context_index, ddr_output_layer.stream_index, ddr_output_layer.nn_stream_config.core_bytes_per_buffer, 
+                    context_index, ddr_output_layer.stream_index, ddr_output_layer.nn_stream_config.core_bytes_per_buffer,
                     ddr_input_layer.stream_index, ddr_input_layer.nn_stream_config.core_bytes_per_buffer);
                 CHECK(ddr_output_layer.ddr_info.total_buffers_per_frame == ddr_input_layer.ddr_info.total_buffers_per_frame,
                     HAILO_INVALID_HEF, "both sides for DDR pair must have the same total_buffers_per_frame.\n"
                     "context index {}. Output stream index - {} output side total_buffers_per_frame - {}."
                     "input stream index {}. input size total_buffers_per_frame - {}",
-                    context_index, ddr_output_layer.stream_index, ddr_output_layer.ddr_info.total_buffers_per_frame, 
+                    context_index, ddr_output_layer.stream_index, ddr_output_layer.ddr_info.total_buffers_per_frame,
                     ddr_input_layer.stream_index, ddr_input_layer.ddr_info.total_buffers_per_frame);
             }
         }
@@ -2596,7 +2596,7 @@ static Expected<ContextSwitchConfigActionPtr> parse_action(const ProtoHEFAction 
                 "Failed to parse HEF. Invalid division factor: {}.", proto_action.enable_nms().division_factor());
 
             // If division_factor is not defined - use division_factor = 1
-            const auto division_factor = (0 == proto_action.enable_nms().division_factor()) ? 
+            const auto division_factor = (0 == proto_action.enable_nms().division_factor()) ?
                 DEFAULT_DIVISION_FACTOR : static_cast<uint8_t>(proto_action.enable_nms().division_factor());
 
             return EnableNmsAction::create(nms_unit_index, network_index, number_of_classes, burst_size, division_factor);
@@ -3062,7 +3062,7 @@ Expected<LayerInfo> HefUtils::get_boundary_layer_info(const ProtoHEFCoreOpMock &
         HAILO_INTERNAL_FAILURE, "get_layer_info can be called only on boundary layers");
 
     LayerInfo result = {};
-    const auto direction = 
+    const auto direction =
         (ProtoHEFEdgeLayerDirection::PROTO__EDGE_LAYER_DIRECTION__DEVICE_TO_HOST == layer.direction()) ?
         HAILO_D2H_STREAM : HAILO_H2D_STREAM;
     auto support_multi_networks = supported_features.multi_network_support;
@@ -3216,7 +3216,7 @@ Expected<LayerInfo> HefUtils::get_ddr_layer_info(const ProtoHEFCoreOpMock &core_
         "Failed to parse HEF. Invalid core_buffers_per_frame: {}.", layer.layer_info().edge_layer_base().core_buffers_per_frame());
     result.ddr_info.total_buffers_per_frame = static_cast<uint16_t>(layer.layer_info().edge_layer_base().core_buffers_per_frame());
 
-    CHECK_AS_EXPECTED(IS_FIT_IN_UINT16(layer.context_switch_info().buffers()), HAILO_INVALID_HEF, 
+    CHECK_AS_EXPECTED(IS_FIT_IN_UINT16(layer.context_switch_info().buffers()), HAILO_INVALID_HEF,
         "calculated number of transfers for DDR buffer is out of UINT16_T range");
     result.ddr_info.min_buffered_rows = static_cast<uint16_t>(layer.context_switch_info().buffers());
 
@@ -3900,8 +3900,8 @@ Expected<std::map<std::string, hailo_vstream_params_t>> Hef::make_input_vstream_
     const std::string &name, bool /*unused*/, hailo_format_type_t format_type, uint32_t timeout_ms,
     uint32_t queue_size)
 {
-    TRY(const auto network_pair, pimpl->get_network_group_and_network_name(name)); 
-    return pimpl->make_input_vstream_params(network_pair.first, network_pair.second, format_type, 
+    TRY(const auto network_pair, pimpl->get_network_group_and_network_name(name));
+    return pimpl->make_input_vstream_params(network_pair.first, network_pair.second, format_type,
         timeout_ms, queue_size);
 }
 
@@ -3922,7 +3922,7 @@ Expected<std::map<std::string, hailo_vstream_params_t>> Hef::make_output_vstream
     uint32_t queue_size)
 {
     TRY(const auto network_pair, pimpl->get_network_group_and_network_name(name));
-    return pimpl->make_output_vstream_params(network_pair.first, network_pair.second, format_type, 
+    return pimpl->make_output_vstream_params(network_pair.first, network_pair.second, format_type,
         timeout_ms, queue_size);
 }
 
@@ -4056,7 +4056,7 @@ Expected<std::map<std::string, hailo_network_parameters_t>> Hef::Impl::create_ne
     std::map<std::string, hailo_network_parameters_t> results;
 
     if (core_op_metadata->supported_features().multi_network_support) {
-        CHECK_AS_EXPECTED((core_op->networks_names.size() != 0), HAILO_INTERNAL_FAILURE, 
+        CHECK_AS_EXPECTED((core_op->networks_names.size() != 0), HAILO_INTERNAL_FAILURE,
         "Hef support multiple networks, but no networks found in the proto");
         for (const auto &partial_network_name : core_op->networks_names) {
             auto network_name = HefUtils::get_network_name(net_group_name, partial_network_name);

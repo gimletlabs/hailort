@@ -16,7 +16,7 @@
 #include <iomanip>
 
 #define MHz (1000 * 1000)
-// div factor is valid only for Hailo8-B0 platform. 
+// div factor is valid only for Hailo8-B0 platform.
 // TODO - HRT-7364 - add CPU subsystem frequency into the device extended info control
 // and use it for get the timer's frequency
 #define NN_CORE_TO_TIMER_FREQ_FACTOR (2)
@@ -117,7 +117,7 @@ Expected<ordered_json> DownloadActionListCommand::parse_hef_metadata(const std::
         {"path", hef_file_path},
         {"file_hash", hef_md5}
     };
-    
+
     return hef_info_json;
 }
 
@@ -135,9 +135,9 @@ Expected<std::string> DownloadActionListCommand::calc_md5_hexdigest(const std::s
 
     MD5_CTX md5_ctx{};
     MD5_SUM_t md5_sum{};
-    MD5_Init(&md5_ctx);
-    MD5_Update(&md5_ctx, hef_bin.data(), hef_bin.size());
-    MD5_Final(md5_sum, &md5_ctx);
+    Hailo_MD5_Init(&md5_ctx);
+    Hailo_MD5_Update(&md5_ctx, hef_bin.data(), hef_bin.size());
+    Hailo_MD5_Final(md5_sum, &md5_ctx);
 
     const bool LOWERCASE = false;
     return StringUtils::to_hex_string(md5_sum, ARRAY_ENTRIES(md5_sum), LOWERCASE);
@@ -148,7 +148,7 @@ hailo_status DownloadActionListCommand::write_json(const ordered_json &json_obj,
 {
     std::ofstream output_file(output_file_path);
     CHECK(output_file, HAILO_INTERNAL_FAILURE, "Failed opening file '{}'", output_file_path);
-    
+
     output_file << std::setw(tab_width) << json_obj << std::endl;
     CHECK(!output_file.bad() && !output_file.fail(), HAILO_INTERNAL_FAILURE,
         "Failed writing to file '{}'", output_file_path);
