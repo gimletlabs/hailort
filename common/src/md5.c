@@ -204,7 +204,7 @@ static const void *body(MD5_CTX *ctx, const void *data, size_t size)
 	return ptr;
 }
 
-void MD5_Init(MD5_CTX *ctx)
+void Hailo_MD5_Init(MD5_CTX *ctx)
 {
 	ctx->a = 0x67452301;
 	ctx->b = 0xefcdab89;
@@ -215,7 +215,7 @@ void MD5_Init(MD5_CTX *ctx)
 	ctx->hi = 0;
 }
 
-void MD5_Update(MD5_CTX *ctx, const void *data, size_t size)
+void Hailo_MD5_Update(MD5_CTX *ctx, const void *data, size_t size)
 {
 	MD5_u32plus saved_lo;
 	size_t used, available;
@@ -255,7 +255,7 @@ void MD5_Update(MD5_CTX *ctx, const void *data, size_t size)
 	(dst)[2] = (unsigned char)((src) >> 16); \
 	(dst)[3] = (unsigned char)((src) >> 24);
 
-void MD5_Final(unsigned char *result, MD5_CTX *ctx)
+void Hailo_MD5_Final(unsigned char *result, MD5_CTX *ctx)
 {
 	unsigned long used, available;
 

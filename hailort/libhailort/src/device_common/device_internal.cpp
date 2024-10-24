@@ -74,7 +74,7 @@ hailo_status DeviceBase::reset(hailo_reset_device_mode_t mode)
         break;
     case HAILO_RESET_DEVICE_MODE_FORCED_SOFT:
         reset_type = CONTROL_PROTOCOL__RESET_TYPE__FORCED_SOFT;
-        break; 
+        break;
     default:
         return HAILO_INVALID_ARGUMENT;
     }
@@ -117,7 +117,7 @@ void DeviceBase::activate_notifications(const std::string &device_id)
 hailo_status DeviceBase::stop_notification_fetch_thread()
 {
     hailo_status status = HAILO_SUCCESS; // best effort
-    
+
     if (m_notif_fetch_thread_params->is_running) {
         m_notif_fetch_thread_params->is_running = false;
         auto disable_status = this->disable_notifications();
@@ -193,9 +193,9 @@ hailo_status DeviceBase::firmware_update(const MemoryView &firmware_binary, bool
     firmware_header_t *new_app_firmware_header = NULL;
     firmware_header_t *new_core_firmware_header = NULL;
 
-    MD5_Init(&md5_ctx);
-    MD5_Update(&md5_ctx, firmware_binary.data(), firmware_binary.size());
-    MD5_Final(md5_sum, &md5_ctx);
+    Hailo_MD5_Init(&md5_ctx);
+    Hailo_MD5_Update(&md5_ctx, firmware_binary.data(), firmware_binary.size());
+    Hailo_MD5_Final(md5_sum, &md5_ctx);
 
     TRY(const auto firmware_type, get_fw_type());
 
@@ -230,20 +230,20 @@ hailo_status DeviceBase::firmware_update(const MemoryView &firmware_binary, bool
     status = validate_fw_version_for_platform(board_info_before_update, new_core_fw_version, FW_BINARY_TYPE_CORE_FIRMWARE);
     CHECK_SUCCESS(status, "Invalid CORE firmware binary was supplied");
 
-    if (IS_REVISION_EXTENDED_CONTEXT_SWITCH_BUFFER(new_app_firmware_header->firmware_revision) || 
+    if (IS_REVISION_EXTENDED_CONTEXT_SWITCH_BUFFER(new_app_firmware_header->firmware_revision) ||
             IS_REVISION_EXTENDED_CONTEXT_SWITCH_BUFFER(new_core_firmware_header->firmware_revision)) {
         LOGGER__ERROR("Can't update to \"extended context switch buffer\" firmware (no ethernet support).");
         return HAILO_INVALID_FIRMWARE;
     }
-    
+
     // TODO: Fix cast, we are assuming they are the same (HRT-3177)
     current_fw_version = reinterpret_cast<firmware_version_t*>(&(board_info_before_update.fw_version));
 
     LOGGER__INFO("Current Version: {}.{}.{}{}. Updating to version: {}.{}.{}{}", current_fw_version->firmware_major,
-      current_fw_version->firmware_minor, current_fw_version->firmware_revision, 
+      current_fw_version->firmware_minor, current_fw_version->firmware_revision,
       DEV_STRING_NOTE(board_info_before_update.is_release),
       new_app_fw_version.firmware_major, new_app_fw_version.firmware_minor,
-      GET_REVISION_NUMBER_VALUE(new_app_fw_version.firmware_revision), 
+      GET_REVISION_NUMBER_VALUE(new_app_fw_version.firmware_revision),
       DEV_STRING_NOTE((!IS_REVISION_DEV(new_app_fw_version.firmware_revision))));
 
 
@@ -292,8 +292,8 @@ hailo_status DeviceBase::firmware_update(const MemoryView &firmware_binary, bool
 
         CHECK_EXPECTED_AS_STATUS(board_info_after_install_expected); // TODO (HRT-13278): Figure out how to remove CHECK_EXPECTED here
         hailo_device_identity_t board_info_after_install = board_info_after_install_expected.release();
-    
-        LOGGER__INFO("New App FW version: {}.{}.{}{}", board_info_after_install.fw_version.major, board_info_after_install.fw_version.minor, 
+
+        LOGGER__INFO("New App FW version: {}.{}.{}{}", board_info_after_install.fw_version.major, board_info_after_install.fw_version.minor,
             board_info_after_install.fw_version.revision, DEV_STRING_NOTE(board_info_after_install.is_release));
 
         // Validating that the new fw version is as expected
@@ -302,12 +302,12 @@ hailo_status DeviceBase::firmware_update(const MemoryView &firmware_binary, bool
             (GET_REVISION_NUMBER_VALUE(board_info_after_install.fw_version.revision) != GET_REVISION_NUMBER_VALUE(new_app_fw_version.firmware_revision))) {
             LOGGER__WARNING("New App FW version is different than expected!");
         }
-        
+
         if (board_info_after_install.device_architecture != HAILO_ARCH_HAILO8_A0) {
             hailo_core_information_t core_info_after_install{};
             status = Control::core_identify(*this, &core_info_after_install);
             CHECK_SUCCESS(status);
-            LOGGER__INFO("New Core FW version: {}.{}.{}{}", core_info_after_install.fw_version.major, core_info_after_install.fw_version.minor, 
+            LOGGER__INFO("New Core FW version: {}.{}.{}{}", core_info_after_install.fw_version.major, core_info_after_install.fw_version.minor,
                 core_info_after_install.fw_version.revision, DEV_STRING_NOTE(core_info_after_install.is_release));
             if ((core_info_after_install.fw_version.major != new_app_fw_version.firmware_major) ||
                 (core_info_after_install.fw_version.minor != new_app_fw_version.firmware_minor) ||
@@ -335,9 +335,9 @@ hailo_status DeviceBase::second_stage_update(uint8_t* second_stage_binary, uint3
     /* Validate arguments */
     CHECK_ARG_NOT_NULL(second_stage_binary);
 
-    MD5_Init(&md5_ctx);
-    MD5_Update(&md5_ctx, second_stage_binary, second_stage_binary_length);
-    MD5_Final(md5_sum, &md5_ctx);
+    Hailo_MD5_Init(&md5_ctx);
+    Hailo_MD5_Update(&md5_ctx, second_stage_binary, second_stage_binary_length);
+    Hailo_MD5_Final(md5_sum, &md5_ctx);
 
     TRY(const auto firmware_type, get_fw_type());
 
@@ -381,8 +381,8 @@ hailo_status DeviceBase::second_stage_update(uint8_t* second_stage_binary, uint3
 hailo_status DeviceBase::store_sensor_config(uint32_t section_index, hailo_sensor_types_t sensor_type,
     uint32_t reset_config_size, uint16_t config_height, uint16_t config_width, uint16_t config_fps,
     const std::string &config_file_path, const std::string &config_name)
-{    
-    CHECK((section_index <= MAX_NON_ISP_SECTIONS), HAILO_INVALID_ARGUMENT, 
+{
+    CHECK((section_index <= MAX_NON_ISP_SECTIONS), HAILO_INVALID_ARGUMENT,
         "Cannot store sensor config in invalid section {}. Please choose section index (0-{}).", section_index, MAX_NON_ISP_SECTIONS);
     CHECK(sensor_type != HAILO_SENSOR_TYPES_HAILO8_ISP, HAILO_INVALID_ARGUMENT,
         "store_sensor_config intended only for sensor config, for ISP config use store_isp");
@@ -392,9 +392,9 @@ hailo_status DeviceBase::store_sensor_config(uint32_t section_index, hailo_senso
         reset_config_size, config_height, config_width, config_fps, config_name);
 }
 
-hailo_status DeviceBase::store_isp_config(uint32_t reset_config_size, uint16_t config_height, uint16_t config_width, uint16_t config_fps, 
+hailo_status DeviceBase::store_isp_config(uint32_t reset_config_size, uint16_t config_height, uint16_t config_width, uint16_t config_fps,
     const std::string &isp_static_config_file_path, const std::string &isp_runtime_config_file_path, const std::string &config_name)
-{    
+{
     TRY(auto control_buffers, SensorConfigUtils::read_isp_config_file(isp_static_config_file_path, isp_runtime_config_file_path),
         "Failed reading ISP config file");
     return store_sensor_control_buffers(control_buffers, SENSOR_CONFIG__ISP_SECTION_INDEX, HAILO_SENSOR_TYPES_HAILO8_ISP,
@@ -425,7 +425,7 @@ hailo_status DeviceBase::sensor_dump_config(uint32_t section_index, const std::s
     TRY(auto operation_cfg, Buffer::create(section_info_ptr->config_size));
 
     size_t read_full_buffer_count = (section_info_ptr->config_size / MAX_CONFIG_ENTRIES_DATA_SIZE);
-    uint32_t residue_to_read = static_cast<uint32_t>(section_info_ptr->config_size - (read_full_buffer_count * MAX_CONFIG_ENTRIES_DATA_SIZE)); 
+    uint32_t residue_to_read = static_cast<uint32_t>(section_info_ptr->config_size - (read_full_buffer_count * MAX_CONFIG_ENTRIES_DATA_SIZE));
     uint32_t entries_count = (section_info_ptr->config_size / static_cast<uint32_t>(sizeof(SENSOR_CONFIG__operation_cfg_t)));
     uint32_t offset = 0;
 
@@ -444,7 +444,7 @@ hailo_status DeviceBase::sensor_dump_config(uint32_t section_index, const std::s
     status = SensorConfigUtils::dump_config_to_csv((SENSOR_CONFIG__operation_cfg_t*)operation_cfg.data(), config_file_path, entries_count);
     CHECK_SUCCESS(status);
 
-    return HAILO_SUCCESS; 
+    return HAILO_SUCCESS;
 }
 
 hailo_status DeviceBase::sensor_set_i2c_bus_index(hailo_sensor_types_t sensor_type, uint32_t bus_index)
@@ -454,7 +454,7 @@ hailo_status DeviceBase::sensor_set_i2c_bus_index(hailo_sensor_types_t sensor_ty
 
 hailo_status DeviceBase::sensor_load_and_start_config(uint32_t section_index)
 {
-    CHECK((section_index <= MAX_NON_ISP_SECTIONS), HAILO_INVALID_ARGUMENT, 
+    CHECK((section_index <= MAX_NON_ISP_SECTIONS), HAILO_INVALID_ARGUMENT,
         "Cannot load config from invalid section index {}. Please choose section index (0-{}).",
         section_index, MAX_NON_ISP_SECTIONS);
     return Control::sensor_load_and_start_config(*this, section_index);
@@ -462,7 +462,7 @@ hailo_status DeviceBase::sensor_load_and_start_config(uint32_t section_index)
 
 hailo_status DeviceBase::sensor_reset(uint32_t section_index)
 {
-    CHECK((section_index <= MAX_NON_ISP_SECTIONS), HAILO_INVALID_ARGUMENT, 
+    CHECK((section_index <= MAX_NON_ISP_SECTIONS), HAILO_INVALID_ARGUMENT,
         "Cannot reset sensor in invalid section index {}. Please choose section index (0-{}).",
             section_index, MAX_NON_ISP_SECTIONS);
     return Control::sensor_reset(*this, section_index);
@@ -591,7 +591,7 @@ void DeviceBase::d2h_notification_thread_main(const std::string &device_id)
 }
 
 hailo_status DeviceBase::check_hef_is_compatible(Hef &hef)
-{    
+{
     TRY(const auto device_arch, get_architecture(), "Can't get device architecture (is the FW loaded?)");
 
     if (!is_hef_compatible(device_arch, static_cast<HEFHwArch>(hef.pimpl->get_device_arch()))) {
@@ -682,7 +682,7 @@ l_exit:
     return status;
 }
 
-hailo_status DeviceBase::validate_binary_version_for_platform(firmware_version_t *new_binary_version, 
+hailo_status DeviceBase::validate_binary_version_for_platform(firmware_version_t *new_binary_version,
     firmware_version_t *min_supported_binary_version, FW_BINARY_TYPE_t fw_binary_type)
 {
     HAILO_COMMON_STATUS_t binary_status = FIRMWARE_HEADER_UTILS__validate_binary_version(new_binary_version, min_supported_binary_version,
@@ -695,10 +695,10 @@ hailo_status DeviceBase::validate_binary_version_for_platform(firmware_version_t
 hailo_status DeviceBase::validate_fw_version_for_platform(const hailo_device_identity_t &board_info, firmware_version_t fw_version, FW_BINARY_TYPE_t fw_binary_type)
 {
     firmware_version_t min_supported_fw_version = {0, 0, 0};
-    const firmware_version_t evb_mdot2_min_version = {2, 1, 0}; 
+    const firmware_version_t evb_mdot2_min_version = {2, 1, 0};
     const firmware_version_t mpcie_min_version = {2, 2, 0};
-    
-    if (0 == strncmp(EVB_PART_NUMBER_PREFIX, board_info.part_number, PART_NUMBER_PREFIX_LENGTH) || 
+
+    if (0 == strncmp(EVB_PART_NUMBER_PREFIX, board_info.part_number, PART_NUMBER_PREFIX_LENGTH) ||
         0 == strncmp(MDOT2_PART_NUMBER_PREFIX, board_info.part_number, PART_NUMBER_PREFIX_LENGTH)) {
         min_supported_fw_version = evb_mdot2_min_version;
     }
@@ -787,17 +787,17 @@ hailo_status DeviceBase::store_sensor_control_buffers(const std::vector<SENSOR_C
 
     for(uint32_t i = 0; i < config_info_full_buffer; i++) {
         status = Control::sensor_store_config(*this, is_first, section_index, offset, reset_config_size, sensor_type, total_data_size,
-            (uint8_t*)control_buffers.data() + offset, (uint32_t)MAX_CONFIG_ENTRIES_DATA_SIZE, 
+            (uint8_t*)control_buffers.data() + offset, (uint32_t)MAX_CONFIG_ENTRIES_DATA_SIZE,
             config_height, config_width, config_fps, static_cast<uint32_t>(config_name.size()), (uint8_t*)config_name.c_str());
         CHECK_SUCCESS(status, "Failed to store sensor config");
-        
+
         offset += (uint32_t)MAX_CONFIG_ENTRIES_DATA_SIZE;
         is_first = 0;
     }
 
     if (offset < total_data_size) {
         status = Control::sensor_store_config(*this, is_first, section_index, offset, reset_config_size, sensor_type, total_data_size,
-            (uint8_t*)control_buffers.data() + offset, total_data_size - offset, 
+            (uint8_t*)control_buffers.data() + offset, total_data_size - offset,
             config_height, config_width, config_fps, static_cast<uint32_t>(config_name.size()), (uint8_t*)config_name.c_str());
         CHECK_SUCCESS(status,"Failed to store sensor config");
     }
