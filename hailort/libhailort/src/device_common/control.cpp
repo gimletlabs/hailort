@@ -98,10 +98,22 @@ Expected<hailo_device_identity_t> control__parse_identify_results(CONTROL_PROTOC
 
     // Check if we're on H10 - relevant only for linux
 #ifdef __linux__
-    TRY(auto host_name_pair, Process::create_and_wait_for_output("hostname", 20));
-    CHECK_AS_EXPECTED(0 == host_name_pair.first, HAILO_INTERNAL_FAILURE, "Failed to run 'hostname'");
-    if (host_name_pair.second.find("hailo10") != std::string::npos) {
-        board_info.device_architecture = HAILO_ARCH_HAILO10H;
+    // [GML] hostname binary does not exist in GEM container, but this causes a fatal error.
+    // Convert failures into a warnings as a workaround.
+    Expected<std::pair<int32_t, std::string>> process_status = Process::create_and_wait_for_output("hostname", 20);
+
+    if (!process_status.has_value()) {
+        LOGGER__WARNING("Failed to run 'hostname'. Hailo10 devices may not work properly.");
+    } else {
+        std::pair<int32_t, std::string> host_name_pair = process_status.value();
+        // CHECK_AS_EXPECTED(0 == host_name_pair.first, HAILO_INTERNAL_FAILURE, "Failed to run 'hostname'");
+        if (host_name_pair.first != 0) {
+            LOGGER__WARNING("'hostname' has non-zero exit status. Hailo10 devices may not work properly.");
+        }
+
+        if (host_name_pair.second.find("hailo10") != std::string::npos) {
+            board_info.device_architecture = HAILO_ARCH_HAILO10H;
+        }
     }
 #endif
 
